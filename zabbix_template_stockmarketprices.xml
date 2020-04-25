@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2020-04-25T17:35:53Z</date>
+    <groups>
+        <group>
+            <name>Templates</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template - Stock Market Prices</template>
+            <name>Template - Stock Market Prices</name>
+            <groups>
+                <group>
+                    <name>Templates</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Stock Market</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>Stock Market status site</name>
+                    <type>HTTP_AGENT</type>
+                    <key>stock.site.stats</key>
+                    <delay>5m</delay>
+                    <history>7d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>Stock Market</name>
+                        </application>
+                    </applications>
+                    <timeout>30s</timeout>
+                    <url>https://br.advfn.com</url>
+                    <retrieve_mode>HEADERS</retrieve_mode>
+                    <output_format>JSON</output_format>
+                    <triggers>
+                        <trigger>
+                            <expression>{nodata(10m)}=1</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{nodata(10m)}=0</recovery_expression>
+                            <name>[{HOST.NAME}] - Stock Site unavailable</name>
+                            <priority>HIGH</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Stock Discovery</name>
+                    <type>EXTERNAL</type>
+                    <key>check_stockprices.py[&quot;{$STOCK_BVMF_NAMES}&quot;]</key>
+                    <delay>10m</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Current Price for {#STOCK_BVMF}</name>
+                            <type>EXTERNAL</type>
+                            <key>check_stockprices.py[&quot;{#STOCK_BVMF}&quot;]</key>
+                            <delay>30m;wd1-5h10-18</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>!R$</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Stock Market Pricing</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.[0].STOCK_PRICE</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Closing Price for {#STOCK_BVMF}</name>
+                            <type>CALCULATED</type>
+                            <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,closing]</key>
+                            <delay>1m;wd1-5h18</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>!R$</units>
+                            <params>last(&quot;check_stockprices.py[\&quot;{#STOCK_BVMF}\&quot;]&quot;)</params>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Stock Market Pricing</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Forecast: Next 24 Hours for [ {#STOCK_BVMF} ]</name>
+                            <type>CALCULATED</type>
+                            <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,forecast.day]</key>
+                            <delay>30m</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>!R$</units>
+                            <params>forecast(&quot;check_stockprices.py[\&quot;{#STOCK_BVMF}\&quot;]&quot;,48h,,24h)</params>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Stock Market Forecast</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Forecast: Next Month for [ {#STOCK_BVMF} ]</name>
+                            <type>CALCULATED</type>
+                            <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,forecast.month]</key>
+                            <delay>1d</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>!R$</units>
+                            <params>forecast(&quot;check_stockprices.py[\&quot;{#STOCK_BVMF}\&quot;]&quot;,60d,,30d)</params>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Stock Market Forecast</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Opening Price for {#STOCK_BVMF}</name>
+                            <type>CALCULATED</type>
+                            <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,opening]</key>
+                            <delay>1m;wd1-5h10</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>!R$</units>
+                            <params>last(&quot;check_stockprices.py[\&quot;{#STOCK_BVMF}\&quot;]&quot;)</params>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Stock Market Pricing</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$SSL_EXPIRY_P1}</macro>
+                    <value>30</value>
+                </macro>
+                <macro>
+                    <macro>{$SSL_EXPIRY_P2}</macro>
+                    <value>60</value>
+                </macro>
+                <macro>
+                    <macro>{$SSL_EXPIRY_P3}</macro>
+                    <value>90</value>
+                </macro>
+                <macro>
+                    <macro>{$SSL_PORT}</macro>
+                    <value>443</value>
+                </macro>
+                <macro>
+                    <macro>{$SSL_SITES}</macro>
+                    <value>&quot;&quot;</value>
+                </macro>
+                <macro>
+                    <macro>{$STOCK_BVMF_NAMES}</macro>
+                    <value>&quot;&quot;</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+</zabbix_export>
