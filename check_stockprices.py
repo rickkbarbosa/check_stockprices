@@ -16,9 +16,12 @@ def getValor(acao):
     soup = BeautifulSoup(r.text, 'html.parser')
     span = soup.find("span", id="quoteElementPiece1")
 
-    if (span > -1):
-        price = span.text.replace(",", ".")
-        return price
+    try:
+        price = span.text.replace(",", ".")       
+    except:
+        prince = "N/A"
+
+    return price
 
 
 acoes = str(sys.argv[1])
