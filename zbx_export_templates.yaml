@@ -1,0 +1,183 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-06-20T03:47:31Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: 74dff6994e4e4fba95c4084c30f8b1aa
+      template: 'Template - Stock Market Prices'
+      name: 'Template - Stock Market Prices'
+      groups:
+        -
+          name: Templates
+      items:
+        -
+          uuid: e33f45171ef246c6977f803d8d164727
+          name: 'Stock Market status site'
+          type: HTTP_AGENT
+          key: stock.site.stats
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          timeout: 30s
+          url: 'https://br.advfn.com'
+          retrieve_mode: HEADERS
+          output_format: JSON
+          tags:
+            -
+              tag: Application
+              value: 'Stock Market'
+          triggers:
+            -
+              uuid: 67293d3f7bc641d88f03c2bd90ae181b
+              expression: 'nodata(/Template - Stock Market Prices/stock.site.stats,10m)=1'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'nodata(/Template - Stock Market Prices/stock.site.stats,10m)=0'
+              name: '[{HOST.NAME}] - Stock Site unavailable'
+              priority: HIGH
+      discovery_rules:
+        -
+          uuid: 7ad59506db5f401e84108eb829d68567
+          name: 'Stock Discovery'
+          type: EXTERNAL
+          key: 'check_stockprices.py["{$STOCK_BVMF_NAMES}"]'
+          delay: 10m
+          item_prototypes:
+            -
+              uuid: e0a12d4e2f7f4922bd5ee53d406db8ee
+              name: 'Current Price for {#STOCK_BVMF}'
+              type: EXTERNAL
+              key: 'check_stockprices.py["{#STOCK_BVMF}"]'
+              delay: 30m;wd1-5h10-18
+              history: 7d
+              value_type: FLOAT
+              units: '!R$'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.[0].STOCK_PRICE'
+              tags:
+                -
+                  tag: Application
+                  value: 'Stock Market Pricing'
+            -
+              uuid: d8aa5219ab7d4957ba0247a31373deba
+              name: 'Closing Price for {#STOCK_BVMF}'
+              type: CALCULATED
+              key: 'check_stockprices["{#STOCK_BVMF}",closing]'
+              delay: 1m;wd1-5h18
+              history: 7d
+              value_type: FLOAT
+              units: '!R$'
+              params: 'last(//check_stockprices.py["{#STOCK_BVMF}"])'
+              tags:
+                -
+                  tag: Application
+                  value: 'Stock Market Pricing'
+            -
+              uuid: 1645c28519be41709a18061596bcf54e
+              name: 'Current Price for {#STOCK_BVMF} (deviation)'
+              type: CALCULATED
+              key: 'check_stockprices["{#STOCK_BVMF}",deviation]'
+              delay: 30m;wd1-5h10-18
+              history: 7d
+              value_type: FLOAT
+              params: 'sqrt((sum(//check_stockprices["{#STOCK_BVMF}",deviation],3d) / 144 ))'
+              description: 'Standard deviation for price in the 3-day range (144 points, because 3 days equals 4320 divided by 30 minutes )'
+              tags:
+                -
+                  tag: Application
+                  value: 'Stock Market Pricing'
+            -
+              uuid: d64ed0e935fe464dbdce768f7f5a709d
+              name: 'Forecast: Next 24 Hours for [ {#STOCK_BVMF} ]'
+              type: CALCULATED
+              key: 'check_stockprices["{#STOCK_BVMF}",forecast.day]'
+              delay: 30m
+              value_type: FLOAT
+              units: '!R$'
+              params: 'forecast(//check_stockprices.py["{#STOCK_BVMF}"],48h,24h)'
+              tags:
+                -
+                  tag: Application
+                  value: 'Stock Market Forecast'
+            -
+              uuid: 9923935ae4204f93bcc5ba6dc336d691
+              name: 'Forecast: Next Month for [ {#STOCK_BVMF} ]'
+              type: CALCULATED
+              key: 'check_stockprices["{#STOCK_BVMF}",forecast.month]'
+              delay: 1d
+              value_type: FLOAT
+              units: '!R$'
+              params: 'forecast(//check_stockprices.py["{#STOCK_BVMF}"],60d,30d)'
+              tags:
+                -
+                  tag: Application
+                  value: 'Stock Market Forecast'
+            -
+              uuid: 418922f4129541aea4511ab2fbf28f99
+              name: 'Opening Price for {#STOCK_BVMF}'
+              type: CALCULATED
+              key: 'check_stockprices["{#STOCK_BVMF}",opening]'
+              delay: 1m;wd1-5h10
+              history: 7d
+              value_type: FLOAT
+              units: '!R$'
+              params: 'last(//check_stockprices.py["{#STOCK_BVMF}"])'
+              tags:
+                -
+                  tag: Application
+                  value: 'Stock Market Pricing'
+            -
+              uuid: b23ea85a43174e8b893edc76b0180470
+              name: 'Current Price for {#STOCK_BVMF} (variance)'
+              type: CALCULATED
+              key: 'check_stockprices["{#STOCK_BVMF}",variance]'
+              delay: 30m;wd1-5h10-18
+              history: 7d
+              value_type: FLOAT
+              params: 'power(last(//check_stockprices.py["{#STOCK_BVMF}"]) - avg(//check_stockprices.py["{#STOCK_BVMF}"],3d),2)'
+              tags:
+                -
+                  tag: Application
+                  value: 'Stock Market Pricing'
+          trigger_prototypes:
+            -
+              uuid: 4214d026bc9c406ab32a1ee8a6741774
+              expression: '((avg(/Template - Stock Market Prices/check_stockprices.py["{#STOCK_BVMF}"],12h) - last(/Template - Stock Market Prices/check_stockprices.py["{#STOCK_BVMF}"]) ) * -1 ) / last(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",deviation]) > {$STOCK_ANOMALY_P2}'
+              name: '[ {HOST.NAME} ] -  Stock price of {#STOCK_BVMF} is falling down'
+              priority: HIGH
+              description: 'Means an anomaly happened with stock market price for {#STOCK_BVMF}'
+            -
+              uuid: d222255c50f54aee95f719b8bfa55de3
+              expression: '(last(/Template - Stock Market Prices/check_stockprices.py["{#STOCK_BVMF}"]) - avg(/Template - Stock Market Prices/check_stockprices.py["{#STOCK_BVMF}"],12h) ) / last(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",deviation]) > {$STOCK_ANOMALY_P2}'
+              name: '[ {HOST.NAME} ] -  Stock price of {#STOCK_BVMF} is raising'
+              priority: AVERAGE
+              description: 'Means an anomaly happened with stock market price for {#STOCK_BVMF}'
+      macros:
+        -
+          macro: '{$SSL_EXPIRY_P1}'
+          value: '30'
+        -
+          macro: '{$SSL_EXPIRY_P2}'
+          value: '60'
+        -
+          macro: '{$SSL_EXPIRY_P3}'
+          value: '90'
+        -
+          macro: '{$SSL_PORT}'
+          value: '443'
+        -
+          macro: '{$SSL_SITES}'
+          value: '""'
+        -
+          macro: '{$STOCK_ANOMALY_P2}'
+          value: '200'
+        -
+          macro: '{$STOCK_BVMF_NAMES}'
+          value: '""'
