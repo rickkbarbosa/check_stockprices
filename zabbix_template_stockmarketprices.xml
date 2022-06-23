@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
-    <version>4.4</version>
-    <date>2020-04-25T17:35:53Z</date>
+    <version>6.0</version>
+    <date>2022-06-23T20:02:04Z</date>
     <groups>
         <group>
+            <uuid>7df96b18c230490a9a0a9e2307226338</uuid>
             <name>Templates</name>
         </group>
     </groups>
     <templates>
         <template>
+            <uuid>74dff6994e4e4fba95c4084c30f8b1aa</uuid>
             <template>Template - Stock Market Prices</template>
             <name>Template - Stock Market Prices</name>
             <groups>
@@ -16,13 +18,28 @@
                     <name>Templates</name>
                 </group>
             </groups>
-            <applications>
-                <application>
-                    <name>Stock Market</name>
-                </application>
-            </applications>
             <items>
                 <item>
+                    <uuid>e8dd34a56bbd4ac694642a552c677820</uuid>
+                    <name>Fundamentus API request</name>
+                    <type>HTTP_AGENT</type>
+                    <key>fundamentus.request</key>
+                    <delay>1h;wd1-5h9,13,17</delay>
+                    <history>7d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Gets data from Fundamentus</description>
+                    <timeout>30s</timeout>
+                    <url>http://fundamentus:5000</url>
+                    <tags>
+                        <tag>
+                            <tag>Application</tag>
+                            <value>Stock Market</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>e33f45171ef246c6977f803d8d164727</uuid>
                     <name>Stock Market status site</name>
                     <type>HTTP_AGENT</type>
                     <key>stock.site.stats</key>
@@ -30,20 +47,22 @@
                     <history>7d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
-                    <applications>
-                        <application>
-                            <name>Stock Market</name>
-                        </application>
-                    </applications>
                     <timeout>30s</timeout>
                     <url>https://br.advfn.com</url>
                     <retrieve_mode>HEADERS</retrieve_mode>
                     <output_format>JSON</output_format>
+                    <tags>
+                        <tag>
+                            <tag>Application</tag>
+                            <value>Stock Market</value>
+                        </tag>
+                    </tags>
                     <triggers>
                         <trigger>
-                            <expression>{nodata(10m)}=1</expression>
+                            <uuid>67293d3f7bc641d88f03c2bd90ae181b</uuid>
+                            <expression>nodata(/Template - Stock Market Prices/stock.site.stats,10m)=1</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{nodata(10m)}=0</recovery_expression>
+                            <recovery_expression>nodata(/Template - Stock Market Prices/stock.site.stats,10m)=0</recovery_expression>
                             <name>[{HOST.NAME}] - Stock Site unavailable</name>
                             <priority>HIGH</priority>
                         </trigger>
@@ -52,32 +71,38 @@
             </items>
             <discovery_rules>
                 <discovery_rule>
+                    <uuid>7ad59506db5f401e84108eb829d68567</uuid>
                     <name>Stock Discovery</name>
                     <type>EXTERNAL</type>
                     <key>check_stockprices.py[&quot;{$STOCK_BVMF_NAMES}&quot;]</key>
                     <delay>10m</delay>
                     <item_prototypes>
                         <item_prototype>
+                            <uuid>e0a12d4e2f7f4922bd5ee53d406db8ee</uuid>
                             <name>Current Price for {#STOCK_BVMF}</name>
                             <type>EXTERNAL</type>
                             <key>check_stockprices.py[&quot;{#STOCK_BVMF}&quot;]</key>
-                            <delay>30m;wd1-5h10-18</delay>
+                            <delay>1h;wd1-5h10-18</delay>
                             <history>7d</history>
                             <value_type>FLOAT</value_type>
                             <units>!R$</units>
-                            <application_prototypes>
-                                <application_prototype>
-                                    <name>Stock Market Pricing</name>
-                                </application_prototype>
-                            </application_prototypes>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$.[0].STOCK_PRICE</params>
+                                    <parameters>
+                                        <parameter>$.[0].STOCK_PRICE</parameter>
+                                    </parameters>
                                 </step>
                             </preprocessing>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>Stock Market Pricing</value>
+                                </tag>
+                            </tags>
                         </item_prototype>
                         <item_prototype>
+                            <uuid>d8aa5219ab7d4957ba0247a31373deba</uuid>
                             <name>Closing Price for {#STOCK_BVMF}</name>
                             <type>CALCULATED</type>
                             <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,closing]</key>
@@ -85,42 +110,105 @@
                             <history>7d</history>
                             <value_type>FLOAT</value_type>
                             <units>!R$</units>
-                            <params>last(&quot;check_stockprices.py[\&quot;{#STOCK_BVMF}\&quot;]&quot;)</params>
-                            <application_prototypes>
-                                <application_prototype>
-                                    <name>Stock Market Pricing</name>
-                                </application_prototype>
-                            </application_prototypes>
+                            <params>last(//check_stockprices.py[&quot;{#STOCK_BVMF}&quot;])</params>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>Stock Market Pricing</value>
+                                </tag>
+                            </tags>
                         </item_prototype>
                         <item_prototype>
+                            <uuid>1645c28519be41709a18061596bcf54e</uuid>
+                            <name>Current Price for {#STOCK_BVMF} (deviation)</name>
+                            <type>CALCULATED</type>
+                            <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,deviation]</key>
+                            <delay>30m;wd1-5h10-18</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <params>sqrt((sum(//check_stockprices[&quot;{#STOCK_BVMF}&quot;,deviation],3d) / 144 ))</params>
+                            <description>Standard deviation for price in the 3-day range (144 points, because 3 days equals 4320 divided by 30 minutes )</description>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>Stock Market Pricing</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>a9cb8e83294a413c95862a3edbe45636</uuid>
+                            <name>Dividend Yelds for {#STOCK_BVMF}</name>
+                            <type>DEPENDENT</type>
+                            <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,dy]</key>
+                            <delay>0</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>%</units>
+                            <description>Divident Yelds.  Proporção em que um ativo pagou em proventos</description>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..{#STOCK_BVMF}.DY</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>TRIM</type>
+                                    <parameters>
+                                        <parameter>[]</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>MULTIPLIER</type>
+                                    <parameters>
+                                        <parameter>1000</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>fundamentus.request</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>Stock Market Pricing</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>d64ed0e935fe464dbdce768f7f5a709d</uuid>
                             <name>Forecast: Next 24 Hours for [ {#STOCK_BVMF} ]</name>
                             <type>CALCULATED</type>
                             <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,forecast.day]</key>
                             <delay>30m</delay>
                             <value_type>FLOAT</value_type>
                             <units>!R$</units>
-                            <params>forecast(&quot;check_stockprices.py[\&quot;{#STOCK_BVMF}\&quot;]&quot;,48h,,24h)</params>
-                            <application_prototypes>
-                                <application_prototype>
-                                    <name>Stock Market Forecast</name>
-                                </application_prototype>
-                            </application_prototypes>
+                            <params>forecast(//check_stockprices.py[&quot;{#STOCK_BVMF}&quot;],48h,24h)</params>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>Stock Market Forecast</value>
+                                </tag>
+                            </tags>
                         </item_prototype>
                         <item_prototype>
+                            <uuid>9923935ae4204f93bcc5ba6dc336d691</uuid>
                             <name>Forecast: Next Month for [ {#STOCK_BVMF} ]</name>
                             <type>CALCULATED</type>
                             <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,forecast.month]</key>
                             <delay>1d</delay>
                             <value_type>FLOAT</value_type>
                             <units>!R$</units>
-                            <params>forecast(&quot;check_stockprices.py[\&quot;{#STOCK_BVMF}\&quot;]&quot;,60d,,30d)</params>
-                            <application_prototypes>
-                                <application_prototype>
-                                    <name>Stock Market Forecast</name>
-                                </application_prototype>
-                            </application_prototypes>
+                            <params>forecast(//check_stockprices.py[&quot;{#STOCK_BVMF}&quot;],60d,30d)</params>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>Stock Market Forecast</value>
+                                </tag>
+                            </tags>
                         </item_prototype>
                         <item_prototype>
+                            <uuid>418922f4129541aea4511ab2fbf28f99</uuid>
                             <name>Opening Price for {#STOCK_BVMF}</name>
                             <type>CALCULATED</type>
                             <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,opening]</key>
@@ -128,14 +216,134 @@
                             <history>7d</history>
                             <value_type>FLOAT</value_type>
                             <units>!R$</units>
-                            <params>last(&quot;check_stockprices.py[\&quot;{#STOCK_BVMF}\&quot;]&quot;)</params>
-                            <application_prototypes>
-                                <application_prototype>
-                                    <name>Stock Market Pricing</name>
-                                </application_prototype>
-                            </application_prototypes>
+                            <params>last(//check_stockprices.py[&quot;{#STOCK_BVMF}&quot;])</params>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>Stock Market Pricing</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>d3900794e0984b079c7e31b9253ca9af</uuid>
+                            <name>P/L for {#STOCK_BVMF}</name>
+                            <type>DEPENDENT</type>
+                            <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,pl]</key>
+                            <delay>0</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>!x</units>
+                            <description>O índice P/L (Preço/Lucro) serve para mostrar qual é o preço que uma determinada ação está no mercado.
+
+Através do P/L é possível descobrir se uma ação está mais barata ou mais cara. 
+Exemplo:
+
+A a empresa K23 tem ações cotadas na Bolsa a R$ 30 por ação e possui um lucro projetado, anualmente, de R$ 5 por ação. Para descobrir o índice P/L usamos a seguinte regra:
+
+P/L = 30/5 = 6
+
+O índice de Graham considera válido um P/L abaixo máximo de 15.</description>
+                            <preprocessing>
+                                <step>
+                                    <type>STR_REPLACE</type>
+                                    <parameters>
+                                        <parameter>/</parameter>
+                                        <parameter>_</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..{#STOCK_BVMF}.P_L</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>TRIM</type>
+                                    <parameters>
+                                        <parameter>[]</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>fundamentus.request</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>Stock Market Pricing</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>9ffaa78997744ce19a295d1dde5fdec3</uuid>
+                            <name>ROIC for {#STOCK_BVMF}</name>
+                            <type>DEPENDENT</type>
+                            <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,roic]</key>
+                            <delay>0</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>!x</units>
+                            <description>Return on Invested Capital.  Retorno sobre investimento de capital, ou quanto uma empresa é capaz de gerar em razão de todo capital investido.
+Útil  para comparar empresas do mesmo setor de atuação.
+
+IMPORTANTE: indica apenas a competência, mas não a geração de caixa, ou seja, é um indicador isolado.</description>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..{#STOCK_BVMF}.ROIC</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>TRIM</type>
+                                    <parameters>
+                                        <parameter>[]</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>fundamentus.request</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>Stock Market Pricing</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>b23ea85a43174e8b893edc76b0180470</uuid>
+                            <name>Current Price for {#STOCK_BVMF} (variance)</name>
+                            <type>CALCULATED</type>
+                            <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,variance]</key>
+                            <delay>30m;wd1-5h10-18</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <params>power(last(//check_stockprices.py[&quot;{#STOCK_BVMF}&quot;]) - avg(//check_stockprices.py[&quot;{#STOCK_BVMF}&quot;],3d),2)</params>
+                            <tags>
+                                <tag>
+                                    <tag>Application</tag>
+                                    <value>Stock Market Pricing</value>
+                                </tag>
+                            </tags>
                         </item_prototype>
                     </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <uuid>4214d026bc9c406ab32a1ee8a6741774</uuid>
+                            <expression>((avg(/Template - Stock Market Prices/check_stockprices.py[&quot;{#STOCK_BVMF}&quot;],12h) - last(/Template - Stock Market Prices/check_stockprices.py[&quot;{#STOCK_BVMF}&quot;]) ) * -1 ) / last(/Template - Stock Market Prices/check_stockprices[&quot;{#STOCK_BVMF}&quot;,deviation]) &gt; {$STOCK_ANOMALY_P2}</expression>
+                            <name>[ {HOST.NAME} ] -  Stock price of {#STOCK_BVMF} is falling down</name>
+                            <priority>HIGH</priority>
+                            <description>Means an anomaly happened with stock market price for {#STOCK_BVMF}</description>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <uuid>d222255c50f54aee95f719b8bfa55de3</uuid>
+                            <expression>(last(/Template - Stock Market Prices/check_stockprices.py[&quot;{#STOCK_BVMF}&quot;]) - avg(/Template - Stock Market Prices/check_stockprices.py[&quot;{#STOCK_BVMF}&quot;],12h) ) / last(/Template - Stock Market Prices/check_stockprices[&quot;{#STOCK_BVMF}&quot;,deviation]) &gt; {$STOCK_ANOMALY_P2}</expression>
+                            <name>[ {HOST.NAME} ] -  Stock price of {#STOCK_BVMF} is raising</name>
+                            <priority>AVERAGE</priority>
+                            <description>Means an anomaly happened with stock market price for {#STOCK_BVMF}</description>
+                        </trigger_prototype>
+                    </trigger_prototypes>
                 </discovery_rule>
             </discovery_rules>
             <macros>
@@ -158,6 +366,10 @@
                 <macro>
                     <macro>{$SSL_SITES}</macro>
                     <value>&quot;&quot;</value>
+                </macro>
+                <macro>
+                    <macro>{$STOCK_ANOMALY_P2}</macro>
+                    <value>200</value>
                 </macro>
                 <macro>
                     <macro>{$STOCK_BVMF_NAMES}</macro>

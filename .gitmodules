@@ -1,0 +1,3 @@
+[submodule "fundamentus"]
+	path = fundamentus
+	url = https://github.com/rickkbarbosa/fundamentus.git
