@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>6.0</version>
-    <date>2022-06-23T20:02:04Z</date>
+    <date>2022-06-23T21:28:33Z</date>
     <groups>
         <group>
             <uuid>7df96b18c230490a9a0a9e2307226338</uuid>
@@ -137,7 +137,7 @@
                         </item_prototype>
                         <item_prototype>
                             <uuid>a9cb8e83294a413c95862a3edbe45636</uuid>
-                            <name>Dividend Yelds for {#STOCK_BVMF}</name>
+                            <name>Dividend Yeld for {#STOCK_BVMF}</name>
                             <type>DEPENDENT</type>
                             <key>check_stockprices[&quot;{#STOCK_BVMF}&quot;,dy]</key>
                             <delay>0</delay>
@@ -161,7 +161,7 @@
                                 <step>
                                     <type>MULTIPLIER</type>
                                     <parameters>
-                                        <parameter>1000</parameter>
+                                        <parameter>100</parameter>
                                     </parameters>
                                 </step>
                             </preprocessing>
