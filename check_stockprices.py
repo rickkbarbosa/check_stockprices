@@ -17,7 +17,7 @@ def getValor(acao):
     r = requests.get(url, headers=headers)
 
     soup = BeautifulSoup(r.text, 'html.parser')
-    span = soup.find("span", id="quoteElementPiece1")
+    span = soup.find("span", id="quoteElementPiece3")
 
     try:
         price = span.text.replace(",", ".")       
