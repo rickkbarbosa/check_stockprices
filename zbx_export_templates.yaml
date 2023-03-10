@@ -1,7 +1,7 @@
 zabbix_export:
-  version: '6.0'
-  date: '2022-06-20T03:47:31Z'
-  groups:
+  version: '6.2'
+  date: '2023-03-10T12:50:09Z'
+  template_groups:
     -
       uuid: 7df96b18c230490a9a0a9e2307226338
       name: Templates
@@ -14,6 +14,22 @@ zabbix_export:
         -
           name: Templates
       items:
+        -
+          uuid: e8dd34a56bbd4ac694642a552c677820
+          name: 'Fundamentus API request'
+          type: HTTP_AGENT
+          key: fundamentus.request
+          delay: '1h;wd1-5h9,12,15,18'
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Gets data from Fundamentus'
+          timeout: 30s
+          url: 'http://fundamentus:5000'
+          tags:
+            -
+              tag: Application
+              value: 'Stock Market'
         -
           uuid: e33f45171ef246c6977f803d8d164727
           name: 'Stock Market status site'
@@ -48,24 +64,6 @@ zabbix_export:
           delay: 10m
           item_prototypes:
             -
-              uuid: e0a12d4e2f7f4922bd5ee53d406db8ee
-              name: 'Current Price for {#STOCK_BVMF}'
-              type: EXTERNAL
-              key: 'check_stockprices.py["{#STOCK_BVMF}"]'
-              delay: 30m;wd1-5h10-18
-              history: 7d
-              value_type: FLOAT
-              units: '!R$'
-              preprocessing:
-                -
-                  type: JSONPATH
-                  parameters:
-                    - '$.[0].STOCK_PRICE'
-              tags:
-                -
-                  tag: Application
-                  value: 'Stock Market Pricing'
-            -
               uuid: d8aa5219ab7d4957ba0247a31373deba
               name: 'Closing Price for {#STOCK_BVMF}'
               type: CALCULATED
@@ -80,6 +78,30 @@ zabbix_export:
                   tag: Application
                   value: 'Stock Market Pricing'
             -
+              uuid: e0a12d4e2f7f4922bd5ee53d406db8ee
+              name: 'Current Price for {#STOCK_BVMF}'
+              type: DEPENDENT
+              key: 'check_stockprices["{#STOCK_BVMF}",current]'
+              delay: '0'
+              history: 7d
+              value_type: FLOAT
+              units: '!R$'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..{#STOCK_BVMF}.Cotacao'
+                -
+                  type: TRIM
+                  parameters:
+                    - '[]'
+              master_item:
+                key: fundamentus.request
+              tags:
+                -
+                  tag: Application
+                  value: 'Stock Market Pricing'
+            -
               uuid: 1645c28519be41709a18061596bcf54e
               name: 'Current Price for {#STOCK_BVMF} (deviation)'
               type: CALCULATED
@@ -89,6 +111,35 @@ zabbix_export:
               value_type: FLOAT
               params: 'sqrt((sum(//check_stockprices["{#STOCK_BVMF}",deviation],3d) / 144 ))'
               description: 'Standard deviation for price in the 3-day range (144 points, because 3 days equals 4320 divided by 30 minutes )'
+              tags:
+                -
+                  tag: Application
+                  value: 'Stock Market Pricing'
+            -
+              uuid: a9cb8e83294a413c95862a3edbe45636
+              name: 'Dividend Yeld for {#STOCK_BVMF}'
+              type: DEPENDENT
+              key: 'check_stockprices["{#STOCK_BVMF}",dy]'
+              delay: '0'
+              history: 7d
+              value_type: FLOAT
+              units: '%'
+              description: 'Divident Yelds.  Proporção em que um ativo pagou em proventos'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..{#STOCK_BVMF}.DY'
+                -
+                  type: TRIM
+                  parameters:
+                    - '[]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '100'
+              master_item:
+                key: fundamentus.request
               tags:
                 -
                   tag: Application
@@ -134,6 +185,75 @@ zabbix_export:
                   tag: Application
                   value: 'Stock Market Pricing'
             -
+              uuid: d3900794e0984b079c7e31b9253ca9af
+              name: 'P/L for {#STOCK_BVMF}'
+              type: DEPENDENT
+              key: 'check_stockprices["{#STOCK_BVMF}",pl]'
+              delay: '0'
+              history: 7d
+              value_type: FLOAT
+              units: '!x'
+              description: |
+                O índice P/L (Preço/Lucro) serve para mostrar qual é o preço que uma determinada ação está no mercado.
+                
+                Através do P/L é possível descobrir se uma ação está mais barata ou mais cara. 
+                Exemplo:
+                
+                A a empresa K23 tem ações cotadas na Bolsa a R$ 30 por ação e possui um lucro projetado, anualmente, de R$ 5 por ação. Para descobrir o índice P/L usamos a seguinte regra:
+                
+                P/L = 30/5 = 6
+                
+                O índice de Graham considera válido um P/L abaixo máximo de 15.
+              preprocessing:
+                -
+                  type: STR_REPLACE
+                  parameters:
+                    - /
+                    - _
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..{#STOCK_BVMF}.P_L'
+                -
+                  type: TRIM
+                  parameters:
+                    - '[]'
+              master_item:
+                key: fundamentus.request
+              tags:
+                -
+                  tag: Application
+                  value: 'Stock Market Pricing'
+            -
+              uuid: 9ffaa78997744ce19a295d1dde5fdec3
+              name: 'ROIC for {#STOCK_BVMF}'
+              type: DEPENDENT
+              key: 'check_stockprices["{#STOCK_BVMF}",roic]'
+              delay: '0'
+              history: 7d
+              value_type: FLOAT
+              units: '!x'
+              description: |
+                Return on Invested Capital.  Retorno sobre investimento de capital, ou quanto uma empresa é capaz de gerar em razão de todo capital investido.
+                Útil  para comparar empresas do mesmo setor de atuação.
+                
+                IMPORTANTE: indica apenas a competência, mas não a geração de caixa, ou seja, é um indicador isolado.
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..{#STOCK_BVMF}.ROIC'
+                -
+                  type: TRIM
+                  parameters:
+                    - '[]'
+              master_item:
+                key: fundamentus.request
+              tags:
+                -
+                  tag: Application
+                  value: 'Stock Market Pricing'
+            -
               uuid: b23ea85a43174e8b893edc76b0180470
               name: 'Current Price for {#STOCK_BVMF} (variance)'
               type: CALCULATED
@@ -149,13 +269,13 @@ zabbix_export:
           trigger_prototypes:
             -
               uuid: 4214d026bc9c406ab32a1ee8a6741774
-              expression: '((avg(/Template - Stock Market Prices/check_stockprices.py["{#STOCK_BVMF}"],12h) - last(/Template - Stock Market Prices/check_stockprices.py["{#STOCK_BVMF}"]) ) * -1 ) / last(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",deviation]) > {$STOCK_ANOMALY_P2}'
+              expression: '((avg(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",current],12h) - last(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",current]) ) * -1 ) / last(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",deviation]) > {$STOCK_ANOMALY_P2}'
               name: '[ {HOST.NAME} ] -  Stock price of {#STOCK_BVMF} is falling down'
               priority: HIGH
               description: 'Means an anomaly happened with stock market price for {#STOCK_BVMF}'
             -
               uuid: d222255c50f54aee95f719b8bfa55de3
-              expression: '(last(/Template - Stock Market Prices/check_stockprices.py["{#STOCK_BVMF}"]) - avg(/Template - Stock Market Prices/check_stockprices.py["{#STOCK_BVMF}"],12h) ) / last(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",deviation]) > {$STOCK_ANOMALY_P2}'
+              expression: '(last(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",current]) - avg(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",current],12h) ) / last(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",deviation]) > {$STOCK_ANOMALY_P2}'
               name: '[ {HOST.NAME} ] -  Stock price of {#STOCK_BVMF} is raising'
               priority: AVERAGE
               description: 'Means an anomaly happened with stock market price for {#STOCK_BVMF}'
