@@ -223,6 +223,26 @@ zabbix_export:
                   value: 'Stock Market Pricing'
                 - tag: 'Stock BVMF ID'
                   value: '{#STOCK_BVMF}'
+              trigger_prototypes:
+                - uuid: 1b075fd314f64a0892ec206976f3fd07
+                  expression: 'avg(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",pl],#3)>12'
+                  name: '[ {HOST.NAME} ] -  P/L for {#STOCK_BVMF} is too high'
+                  priority: AVERAGE
+                  description: 'P/L has a too high value, according Grahan metrics, for  {#STOCK_BVMF}'
+                  dependencies:
+                    - name: '[ {HOST.NAME} ] -  P/L for {#STOCK_BVMF} is too high'
+                      expression: 'avg(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",pl],#3)>15'
+                  tags:
+                    - tag: 'Stock BVMF ID'
+                      value: '{#STOCK_BVMF}'
+                - uuid: e2aed5786f334d6e91a75c12bbc6a900
+                  expression: 'avg(/Template - Stock Market Prices/check_stockprices["{#STOCK_BVMF}",pl],#3)>15'
+                  name: '[ {HOST.NAME} ] -  P/L for {#STOCK_BVMF} is too high'
+                  priority: HIGH
+                  description: 'P/L has a too high value, according Grahan metrics, for  {#STOCK_BVMF}'
+                  tags:
+                    - tag: 'Stock BVMF ID'
+                      value: '{#STOCK_BVMF}'
             - uuid: 9ffaa78997744ce19a295d1dde5fdec3
               name: 'ROIC for {#STOCK_BVMF}'
               type: DEPENDENT
