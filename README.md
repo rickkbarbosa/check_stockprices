@@ -6,6 +6,9 @@ Build and launch an sidecar container with Fundamentus API  results in (http://y
 
 Additionally, contains a Zabbix 7.0 template to stores collected data.
 
+
+![Example Image](shot.png)
+
 HOW TO USE THIS REPOSITORY
 ==========================
 
